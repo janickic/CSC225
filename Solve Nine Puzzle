@@ -1,0 +1,286 @@
+/*
+* SolveNinePuzzle.java
+* CSC 225, Assignment 4
+* Student: Camille Janicki
+*
+* This program takes in a file and reads the first 9 ints and puts them in a 3x3 grid.
+* The program takes the grid and moves the empty space vertically and horizontally to get to the goal state.
+* When the goal state is reached, the path is printed. If the goal state is not reached, then "No Solution" is printed.
+* The path is found doing a BFS search (using a queue) and stored in a hashtable. The hashtable also keeps track of visited nodes.
+*
+*/
+
+
+import java.util. ArrayList;
+import java.util. Arrays;
+import java.util. HashSet;
+import java.util.*;
+import java.io.*;
+
+
+public class SolveNinePuzzle{
+
+	/*
+	* This method does a BFS search to find the shortest (using a queue). When a vertex is visited, it is added to the hashtable. 
+	*/
+	public static boolean SolveNinePuzzle(int [][] cur, int[][] goal)
+	{	
+		HashMap<String, int[][]> hashSet = new HashMap<String, int[][]>();
+		Queue<int[][]> q = new LinkedList<int[][]>();
+		
+		//If the board sent in is the goal board
+		String msgCur= Arrays.deepToString(cur);
+		if(msgCur.equals(Arrays.deepToString(goal)))
+		{
+			System.out.println("Goal board");
+			return true;
+		}
+		
+		q.add(cur);
+		hashSet.put(msgCur, null);
+		
+		//Looping until queue is empty
+		while(q.size()!=0)
+		{
+			int[][] temp=q.remove();
+			if(Arrays.deepToString(temp).equals(Arrays.deepToString(goal)))
+			{
+				System.out.println("True");
+				printResult(temp, goal, hashSet);
+
+				return true;
+			}
+			findAdjacent(temp, goal, q, hashSet);
+		}
+		
+		return false;
+	}
+	
+	/*
+	* This method finds all the possible adjacent swaps. If the swap is possible, it is added to the queue and the hashtable.
+	*/
+	public static void findAdjacent(int [][] cur, int[][] goal, Queue<int[][]> q, HashMap<String, int[][]> hashSet )
+	{
+		int zeroi=0;
+		int zeroj=0;
+		int[][] copyCur=original(cur);
+		
+		//Finding where the zero is in the matrix
+		for(int i=0; i<cur.length; i++)
+		{
+			for(int j=0; j<cur[i].length; j++)
+			{
+				if(cur[i][j]==0)
+				{
+					zeroi=i;
+					zeroj=j;
+				}				
+			}
+		}	
+		
+		int a=0;
+		int b=0;
+		int [][] newBoard;
+		String newBoard_st;
+		
+		//Checking for down swap
+		if(zeroi==0 || zeroi==1) 
+		{
+			a=zeroi+1;
+			b=zeroj;
+			newBoard=buildBoard(copyCur, zeroi, zeroj, a, b);
+			newBoard_st=Arrays.deepToString(newBoard);
+			if(!hashSet.containsKey(newBoard_st))
+			{
+				hashSet.put(newBoard_st, copyCur);
+				q.add(newBoard);
+			}
+		}
+		copyCur=original(cur);
+		
+		//Checking for up swap
+		if(zeroi==2|| zeroi==1) 
+		{
+			a=zeroi-1;
+			b=zeroj;
+			newBoard=buildBoard(copyCur, zeroi, zeroj, a, b);
+			newBoard_st=Arrays.deepToString(newBoard);
+			if(!hashSet.containsKey(newBoard_st))
+			{
+				hashSet.put(newBoard_st, copyCur);
+				q.add(newBoard);
+			}
+		}
+		copyCur=original(cur);
+		
+		//Checking for right swap
+		if(zeroj==0 || zeroj==1) 
+		{
+			a=zeroi;
+			b=zeroj+1;
+			newBoard=buildBoard(copyCur, zeroi, zeroj, a, b);
+			newBoard_st=Arrays.deepToString(newBoard);
+			if(!hashSet.containsKey(newBoard_st))
+			{
+				hashSet.put(newBoard_st, copyCur);
+				q.add(newBoard);
+			}	
+		}
+		copyCur=original(cur);
+		
+		//Checking for left swap
+		if(zeroj==2 || zeroj==1) 
+		{
+			a=zeroi;
+			b=zeroj-1;
+			newBoard=buildBoard(copyCur, zeroi, zeroj, a, b);
+			newBoard_st=Arrays.deepToString(newBoard);
+			if(!hashSet.containsKey(newBoard_st))
+			{
+				hashSet.put(newBoard_st, copyCur);
+				q.add(newBoard);
+			}
+		}
+	}
+	
+	/*
+	* This method prints the path when the goal is found. This method finds the parent as the value in the hashtable and the
+	* child as the key. Then a stack is used to reverse the order and to print the path.
+	*/
+	public static void printResult(int[][] start, int[][] goal, HashMap<String, int[][]> hashSet)
+	{
+		Stack<int[][]> path= new Stack<int[][]>();
+		path.push(start);
+		String start_st=Arrays.deepToString(start);
+		int [][] parent=hashSet.get(start_st);
+			
+		while(parent != null )
+		{
+			path.push(parent);
+			int [][] cur=parent;
+			String cur_st=Arrays.deepToString(cur);
+			parent=hashSet.get(cur_st);
+				
+		}
+
+		while(!path.isEmpty())
+		{
+			int[][] result= path.pop();
+			printBoard(result);
+		}
+			
+	}
+	 
+	 /*
+	 * This method creates a duplicate of a board in a new space in memory. 
+	 */
+	public static int[][] original(int[][] cur)
+	{
+		int[][] temp= new int[3][3];
+		for(int i=0; i<cur.length; i++)
+		{
+			for(int j=0; j<cur[i].length; j++)
+			{
+				temp[i][j]=cur[i][j];
+			}
+		}
+	
+		return temp;
+	}
+	
+	/*
+	* This method swaps the zero to create the new board.
+	*/
+	public static int[][] buildBoard(int[][] copyCur, int zeroi, int zeroj, int a, int b)	
+	{
+		int[][] cur=original(copyCur);
+		
+		int temp= cur[zeroi][zeroj];
+		cur[zeroi][zeroj]=cur[a][b];
+		cur[a][b] = temp;
+		
+		return cur;
+	}
+	
+	/*
+	* This method prints the 2D array
+	*/
+	public static void printBoard(int[][] board)
+	{
+		for(int i = 0; i<board.length; i++)
+		{
+			for(int j = 0; j<board[i].length; j++)
+			{
+				System.out.print(board[i][j]+" ");
+			}
+			System.out.println();
+		}
+		System.out.println();
+	}
+	
+	/*
+	* This method takes in a file or reads in numbers from the user, then it takes the first nine ints 
+	* and makes them into a 3x3 grid.
+	*/
+	public static void main (String[] args)
+	{
+		int[][] goal= {{1,2,3},
+					{4,5,6},
+					{7,8,0}};
+	
+	
+		int boardNum=1;
+	
+		int[][] board= new int[3][3];
+		Scanner scan;
+		if(args.length>0)
+		{
+			try
+			{
+				scan=new Scanner(new File(args[0]));
+			}
+			catch(FileNotFoundException e)
+			{
+				System.out.println("Error");
+				return;
+			}
+		}
+		else
+		{
+			scan=new Scanner(System.in);
+			System.out.println("Please insert a list a non-negative ints");
+				
+		}
+	
+		while(scan.hasNext())
+		{
+			System.out.println("Reading board "+boardNum+" :");
+			for (int i=0; i<3; i++)
+			{
+				for(int j=0; j<3; j++)
+				{
+					board[i][j]=scan.nextInt();
+				}
+			}
+
+			printBoard(board);
+			System.out.println("Attempting to solve board "+ boardNum);
+			boolean value=SolveNinePuzzle(board, goal);
+			if(value){
+				System.out.println("Board "+boardNum+": Solved.");
+			}else
+			{
+				System.out.println("Board "+boardNum+": No Solution.");
+			}
+			System.out.println("Processed "+boardNum+" board(s)");
+			
+			long startTime = System.currentTimeMillis();
+			long endTime = System.currentTimeMillis();
+			double totalTimeSeconds = (endTime-startTime)/1000.0;
+			System.out.printf("Total Time (seconds): %.4f\n",totalTimeSeconds);
+			System.out.println();
+			System.out.println();
+			boardNum++;
+		}
+	}
+}
